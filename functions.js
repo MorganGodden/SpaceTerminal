@@ -51,7 +51,7 @@ function mainMenu() {
         }
     })
 
-    console.log("\nPress a letter to select a menu. Or 'CTRL+C' to exit.");
+    console.log("\nPress a letter to select a menu. Or 'CTRL + C' to exit.");
 }
 
 
@@ -91,9 +91,12 @@ function outMenu(title, body, doHeader = true) {
 
 function outHeader() {
     console.clear()
-    console.log("╭" + ("─".repeat(26)) + "╮")
-    console.log("│" + chalk.green.bold(" The SpaceTerminal Client ") + "│")
-    console.log("╰" + ("─".repeat(26)) + "╯");
+    console.log("╭" + ("─".repeat(30)) + "╮")
+    console.log("│" + chalk.red.bold('⠀⣠⢴⡾⢟⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⡴⢃⡠⠋⣠⠋ ') + '│\n│' + chalk.red.bold('⠞⣱⠋⢰⠁⢿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣠⠤⢖⣋⡥⢖⣫⠔⠋⡠ ⠀') + '│\n│' + chalk.red.bold('⢖⠹⢤⣈⣙⠚⠶⠤⠤⠤⠴⠶⣒⣒⣚⣩⠭⢵⣒⣻⠭⢖⠏⠁ ⠚⠁   ') + '│');
+    console.log("│  " + chalk.gray("─".repeat(26)) + "  │")
+
+    console.log("│  " + chalk.green.bold(" The SpaceTerminal Client ") + "  │")
+    console.log("╰" + ("─".repeat(30)) + "╯");
 }
 
 
