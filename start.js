@@ -1,2 +1,2 @@
-const functions = require('./functions.js')
+const functions = require('./scripts/functions.js')
 functions.mainMenu();

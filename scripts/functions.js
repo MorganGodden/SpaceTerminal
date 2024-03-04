@@ -46,7 +46,7 @@ function mainMenu() {
         if (commands[key.name] != null) {
             outHeader();
     
-            var script = require('./scripts/' + commands[key.name]);
+            var script = require("./" + commands[key.name]);
             script.get();
         }
     })

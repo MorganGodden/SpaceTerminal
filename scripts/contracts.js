@@ -1,4 +1,4 @@
-const functions = require('../functions.js');
+const functions = require('./functions.js');
 const chalk = require('chalk');
 
 module.exports = {get};

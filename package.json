@@ -1,0 +1,43 @@
+{
+  "name": "spaceterminal",
+  "version": "0.0.1",
+  "description": "The SpaceTerminal Client",
+  "main": "start.js",
+  "bin": "start.js",
+  "dependencies": {
+    "ansi-styles": "^4.3.0",
+    "ansi-regex": "^6.0.1",
+    "color-convert": "^2.0.1",
+    "dotenv": "^16.4.5",
+    "has-flag": "^4.0.0",
+    "supports-color": "^7.2.0",
+    "chalk": "^4.1.2",
+    "color-name": "^1.1.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "pkg": "pkg package.json --no-bytecode --compress GZIP -o ./builds/SpaceTerminal && start ./builds/SpaceTerminal"
+  },
+  "pkg": {
+    "scripts": "./scripts/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MorganGodden/SpaceTerminal.git"
+  },
+  "keywords": [
+    "cli",
+    "terminal",
+    "game"
+  ],
+  "author": "Morgan Rose Godden <morgan.godden@outlook.com> (https://godden.dev/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MorganGodden/SpaceTerminal/issues"
+  },
+  "homepage": "https://github.com/MorganGodden/SpaceTerminal#readme",
+  "funding": {
+    "type": "individual",
+    "url": "https://buymeacoffee.com/morgan.godden"
+  }
+}
