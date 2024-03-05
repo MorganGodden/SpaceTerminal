@@ -5,16 +5,16 @@
   "main": "start.js",
   "bin": "start.js",
   "dependencies": {
-    "ansi-styles": "^4.3.0",
     "ansi-regex": "^6.0.1",
+    "ansi-styles": "^4.3.0",
+    "chalk": "^4.1.2",
+    "clipboard-cli": "^4.0.0",
     "color-convert": "^2.0.1",
+    "color-name": "^1.1.4",
     "dotenv": "^16.4.5",
     "has-flag": "^4.0.0",
-    "supports-color": "^7.2.0",
-    "chalk": "^4.1.2",
-    "color-name": "^1.1.4"
+    "supports-color": "^7.2.0"
   },
-  "devDependencies": {},
   "scripts": {
     "pkg": "pkg package.json --no-bytecode --compress GZIP -o ./builds/SpaceTerminal && start ./builds/SpaceTerminal"
   },

@@ -1,18 +1,20 @@
 const chalk = require('chalk');
 const readline = require('readline');
 const dotenv = require('dotenv');
+const { time } = require('console');
+const os = require('os');
 dotenv.config();
 
 module.exports = {formatTime, st_fetch, clearLastLn, mainMenu, back, outMenu, outHeader, keyboardInput};
 ansiRegex = new RegExp(['[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)','(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))'].join('|'))
 
 
-
+token = getUserData('token');
 options = {
     method: 'GET',
     headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + process.env.TOKEN
+        'Authorization': 'Bearer ' + token
     },
 };
 
@@ -28,10 +30,76 @@ function st_fetch(path, func, method = 'GET') {
 
 
 
+// Userdata
+function getUserData(key) {
+    const fs = require('fs');
+    const path = os.tmpdir() + '/userdata.json';
+    if (!fs.existsSync(path)) {
+        fs.writeFileSync(path, JSON.stringify({}));
+        return null;
+    }
+    else {
+        data = fs.readFileSync (path, 'utf8');
+        data = JSON.parse(data);
+        return data[key];
+    }
+}
+
+function setUserData(key, value) {
+    const fs = require('fs');
+    const path = os.tmpdir() + '/userdata.json';
+    if (!fs.existsSync(path)) {
+        fs.writeFileSync(path, JSON.stringify({}));
+    }
+    data = fs.readFileSync (path, 'utf8');
+    data = JSON.parse(data);
+    data[key] = value;
+    fs.writeFileSync(path, JSON.stringify(data));
+
+    return data;
+}
+
 
 // Output
-mainMenu()
+function login() {
+    outHeader();
+    console.log("Paste your token (right-click): ");
+
+    input = "";
+    // Keyboard input, with copy-paste support
+    keyboardInput((str, key) => {
+        if (key.name == 'return' && input.length > 100) {
+            token = input;
+            options.headers.Authorization = 'Bearer ' + token;
+            setUserData('token', token);
+            mainMenu();
+            return
+        }
+        else if (key.name == 'backspace') {
+            if (input.length > 0) {
+                process.stdout.clearLine();
+                process.stdout.cursorTo(0);
+            }
+            input = ""
+        }
+        // If ctrl + v
+        else if ((key.ctrl && key.name == 'v')) {
+            return;
+        }
+        else {
+            input += str;
+            str = (input.length % 50 == 0) ? str + "\n" : str;
+            process.stdout.write(chalk.gray(str));
+        }
+    });
+}
+
 function mainMenu() {
+    if(token == null) {
+        login();
+        return;
+    }
+
     commands = {
         'f': 'factions.js',
         'a': 'agent.js',
