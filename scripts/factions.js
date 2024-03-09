@@ -20,7 +20,6 @@ function get() {
                 traits.push(trait.name);
             });
 
-            console.log("\n");
             functions.outMenu(name + " (" + faction.symbol + ")", {
                 "HQ": faction.headquarters,
                 "TRTS": traits.join(", "),

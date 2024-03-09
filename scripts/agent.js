@@ -11,7 +11,7 @@ function get() {
         functions.outMenu("AGENT", {
             "ACNT": data.symbol + " (" + data.accountId + ")",
             "FACT": data.startingFaction + " (" + data.headquarters + ")",
-            "CRDT": data.credits.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+            "CRDT": functions.formatCredits(data.credits),
             "SHPS": data.shipCount
         });
 

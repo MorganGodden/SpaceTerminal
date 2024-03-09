@@ -1,13 +1,16 @@
 const chalk = require('chalk');
 const readline = require('readline');
 const dotenv = require('dotenv');
-const { time } = require('console');
 const os = require('os');
+const fs = require('fs');
+
 dotenv.config();
 
-module.exports = {formatTime, st_fetch, clearLastLn, mainMenu, back, outMenu, outHeader, keyboardInput};
+module.exports = {formatTime, formatCredits, st_fetch, clearLastLn, mainMenu, back, outMenu, outHeader, keyboardInput};
 ansiRegex = new RegExp(['[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)','(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))'].join('|'))
 
+tmpdir = os.tmpdir() + '/SpaceTerminal';
+userdata = tmpdir + '/userdata.json';
 
 token = getUserData('token');
 options = {
@@ -31,30 +34,34 @@ function st_fetch(path, func, method = 'GET') {
 
 
 // Userdata
+function checkTmpDir() {
+    if (!fs.existsSync(tmpdir)){
+        fs.mkdirSync(tmpdir);
+    }
+}
+
 function getUserData(key) {
-    const fs = require('fs');
-    const path = os.tmpdir() + '/userdata.json';
-    if (!fs.existsSync(path)) {
-        fs.writeFileSync(path, JSON.stringify({}));
+    checkTmpDir();
+    if (!fs.existsSync(userdata)) {
+        fs.writeFileSync(userdata, JSON.stringify({}));
         return null;
     }
     else {
-        data = fs.readFileSync (path, 'utf8');
+        data = fs.readFileSync (userdata, 'utf8');
         data = JSON.parse(data);
         return data[key];
     }
 }
 
 function setUserData(key, value) {
-    const fs = require('fs');
-    const path = os.tmpdir() + '/userdata.json';
-    if (!fs.existsSync(path)) {
-        fs.writeFileSync(path, JSON.stringify({}));
+    checkTmpDir();
+    if (!fs.existsSync(userdata)) {
+        fs.writeFileSync(userdata, JSON.stringify({}));
     }
-    data = fs.readFileSync (path, 'utf8');
+    data = fs.readFileSync (userdata, 'utf8');
     data = JSON.parse(data);
     data[key] = value;
-    fs.writeFileSync(path, JSON.stringify(data));
+    fs.writeFileSync(userdata, JSON.stringify(data));
 
     return data;
 }
@@ -127,31 +134,48 @@ function mainMenu() {
 function outMenu(title, body, doHeader = true) {
     if(doHeader) outHeader();
 
+    // Menu width based on longest key-value pair
     menuWidth = 0;
     for (var key in body) {
         if(body[key] == null) continue; // If null
 
-        stripped = String(body[key]).replace(ansiRegex, '').replace(/\u001b\[.*?m/g, '');
-        length = String(key).length + stripped.length + 4;
-        if (length > menuWidth) menuWidth = length;
+        rows = String(body[key]).split("\n");
+        for (var i = 0; i < rows.length; i++) {
+            row = rows[i].replace(ansiRegex, '').replace(/\u001b\[.*?m/g, '');
+            length = String(key).length + row.length + 4;
+            if (length > menuWidth) menuWidth = length;
+        }
     }
 
+    // Menu width based on title
+    strippedTitle = title.replace(ansiRegex, '').replace(/\u001b\[.*?m/g, '');
+    if ((strippedTitle.length + 4) > menuWidth) menuWidth = strippedTitle.length + 4;
+
+    
     // Dashes
-    titleDashes = menuWidth - title.length - 2;
+    titleDashes = menuWidth - strippedTitle.length - 2;
     if (titleDashes < 0) titleDashes = 0;
 
     console.log("╭ " + chalk.bold(title) + " " + ("─".repeat(titleDashes)) + "╮") // Title
-    // Body
+
+
+    // Body rows
     for (var key in body) {
         if(body[key] == null) continue; // If null
         val = String(body[key]) || "";
+        
+        rows = val.split("\n");
+        for (var i = 0; i < rows.length; i++) {
+            valLength = rows[i].replace(ansiRegex, '').replace(/\u001b\[.*?m/g, '').length;
+            rowLength = String(key).length + valLength + 4;
+            rowSpaces = menuWidth - rowLength;
+            if (rowSpaces < 0) rowSpaces = 0;
 
-        length = String(key).length + val.replace(ansiRegex, '').replace(/\u001b\[.*?m/g, '').length + 3;
-        rowSpaces = menuWidth - length;
-        if (rowSpaces < 0) rowSpaces = 0;
-
-        console.log("│ " + chalk.gray(key.toUpperCase() + ": ") + body[key] + " ".repeat(rowSpaces) + "│");
+            rowKey = (i == 0) ? chalk.gray(key.toUpperCase() + ":") : " ".repeat(String(key).length + 1);
+            console.log("│ " + rowKey + " " + rows[i] + " ".repeat(rowSpaces) + " │")
+        }
     }
+
     console.log("╰" + ("─".repeat(menuWidth)) + "╯");
 }
 
@@ -170,6 +194,10 @@ function outHeader() {
 
 function formatTime(time) {
     return time.replace("T", " at ").split(".")[0];
+}
+
+function formatCredits(credits) {
+    return "₿" + credits.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 
