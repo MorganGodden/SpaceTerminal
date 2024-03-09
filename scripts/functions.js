@@ -3,10 +3,11 @@ const readline = require('readline');
 const dotenv = require('dotenv');
 const os = require('os');
 const fs = require('fs');
+const { clear } = require('console');
 
 dotenv.config();
 
-module.exports = {formatTime, formatCredits, st_fetch, clearLastLn, mainMenu, back, outMenu, outHeader, keyboardInput};
+module.exports = {formatTime, formatCredits, st_fetch, clearLastLn, mainMenu, back, outSelector, outMenu, outHeader, keyboardInput, optionsIndex};
 ansiRegex = new RegExp(['[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)','(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))'].join('|'))
 
 tmpdir = os.tmpdir() + '/SpaceTerminal';
@@ -21,14 +22,17 @@ options = {
     },
 };
 
-function st_fetch(path, func, method = 'GET') {
+function st_fetch(path, func, method, data = null) {
     options["method"] = method;
+    if (data) options["body"] = JSON.stringify(data);
 
     path = 'https://api.spacetraders.io/v2/' + path
     fetch(path, options)
         .then(response => response.json())
         .then(response => func(response))
         .catch(err => console.error(path + "\n" + err));
+
+    if (data) delete options["body"];
 }
 
 
@@ -130,8 +134,40 @@ function mainMenu() {
 }
 
 
+var optionsIndex = 0;
+async function outSelector(title, body, options, doHeader = true) {
+    optionsIndex = options.length / 2 | 0;
 
-function outMenu(title, body, doHeader = true) {
+    function out (clearCount) {
+        clearLastLn(clearCount);
+        body = {
+            "▲": chalk.gray(options[optionsIndex-1] || ""),
+            "│": chalk.bold(options[optionsIndex]),
+            "▼": chalk.gray(options[optionsIndex+1] || ""),
+        };
+        outMenu(title, body, doHeader, false);
+        console.log("\nPress 'UP' or 'DOWN' to navigate.");
+        console.log("Press 'ENTER' to select.");
+        console.log("Press 'BACKSPACE' to go back.");
+    }
+    out(0);
+
+    return new Promise((resolve, reject) => {
+        keyboardInput((str, key) => {
+            if (key.name === 'up' && optionsIndex > 0) { optionsIndex--; out(9); }
+            else if (key.name === 'down' && optionsIndex < Object.keys(body).length) { optionsIndex++; out(9); }
+            else if (key.name === 'return') {
+                clearLastLn(9);
+                resolve(options[optionsIndex]);
+            }
+            else if (key.name === 'backspace') { back(); }
+        });
+    });
+}
+
+
+
+function outMenu(title, body, doHeader = true, doColons = true) {
     if(doHeader) outHeader();
 
     // Menu width based on longest key-value pair
@@ -171,8 +207,8 @@ function outMenu(title, body, doHeader = true) {
             rowSpaces = menuWidth - rowLength;
             if (rowSpaces < 0) rowSpaces = 0;
 
-            rowKey = (i == 0) ? chalk.gray(key.toUpperCase() + ":") : " ".repeat(String(key).length + 1);
-            console.log("│ " + rowKey + " " + rows[i] + " ".repeat(rowSpaces) + " │")
+            rowKey = (i == 0) ? chalk.gray(key.toUpperCase() + ((doColons) ? ":" : "")) : " ".repeat(String(key).length + 1);
+            console.log("│ " + rowKey + " " + rows[i] + " ".repeat(rowSpaces + ((doColons) ? 0 : 1)) + " │")
         }
     }
 
@@ -197,7 +233,7 @@ function formatTime(time) {
 }
 
 function formatCredits(credits) {
-    return "₿" + credits.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return "" + credits.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 
@@ -214,7 +250,7 @@ function keyboardInput(func) {
     process.stdin.removeAllListeners('keypress');
     process.stdin.on('keypress', (str, key) => {
         if (key.ctrl && key.name === 'c') { process.exit(); }
-        func(str, key);
+        return func(str, key);
     });
 }
 
