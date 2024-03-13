@@ -1,4 +1,5 @@
-const functions = require('./functions.js');
+const functions = require('./api/functions.js');
+const ui = require('./api/ui.js');
 const chalk = require('chalk');
 
 
@@ -6,7 +7,6 @@ module.exports = {get};
 
 
 function get() {
-    functions.outHeader();
     functions.st_fetch('my/ships', (response) => displayShips(response.data))
 }
 
@@ -19,7 +19,7 @@ function displayShips(data) {
         i++;
     });
 
-    functions.outMenu("SHIPS", body);
+    ui.outMenu("SHIPS", body);
 
     console.log("\nPress a number to view ship details. Or 'BACKSPACE' to go back.");
     functions.keyboardInput((str, key) => {
@@ -28,14 +28,14 @@ function displayShips(data) {
         }
 
         else if(key.name == 'backspace') {
-            functions.mainMenu();
+            ui.mainMenu();
         }
     });
 }
 
 
 function displayShipDetails(ship) {
-    functions.outHeader();
+    ui.outHeader();
 
     registration = ship.registration;
     stat = ship.nav.status
@@ -102,7 +102,7 @@ function displayWaypoints(ship, system) {
     body = {};
     i = 1;
     waypoints.map(waypoint => {
-        body[i] = waypoint.symbol + " (" + waypoint.type + " @ " + waypoint.x + "x, " + waypoint.y + "y)";
+        body[waypoint.symbol] = waypoint.type + " (" + waypoint.x + "x, " + waypoint.y + "y)";
         i++;
     });
 
@@ -124,7 +124,7 @@ function displayWaypoints(ship, system) {
 
 
 function displayWaypointMarket(ship) {
-    functions.clearLastLn(6);
+    ui.clearLastLn(6);
     functions.st_fetch('/systems/' + ship.nav.systemSymbol + '/waypoints/' + ship.nav.waypointSymbol + '/market', (response) => {
         market = {};
         if(response.error) { market = response.error }
@@ -136,7 +136,7 @@ function displayWaypointMarket(ship) {
             response.imports.map((good) => { imp += good.name + "; " + ((i % 3 == 0) ? "\n" : ""); i++; });
             response.exports.map((good, i) => exp += good.name + " (" + good.description + ")\n");
             response.transactions.map((good, i) => trans += good.units + " " + good.tradeSymbol + " by " + good.shipSymbol + "\n");
-            response.tradeGoods.map((good, i) => trade += good.symbol + " (" + good.tradeVolume + " units, " + functions.formatCredits(good.purchasePrice) + " each)\n");
+            response.tradeGoods.map((good, i) => trade += good.symbol + " (" + good.tradeVolume + " units, " + ui.formatCredits(good.purchasePrice) + " each)\n");
 
             imp = (imp == "") ? "N/A" : imp.slice(0, -3);
             exp = (exp == "") ? "N/A" : exp.slice(0, -1);
@@ -152,7 +152,7 @@ function displayWaypointMarket(ship) {
             };
         }
 
-        functions.outMenu("MARKET", market, false);
+        ui.outMenu("MARKET", market, false);
         console.log("\nPress 'BACKSPACE' to go back.");
         functions.keyboardInput((str, key) => {
             if(key.name == 'backspace') {
@@ -164,7 +164,7 @@ function displayWaypointMarket(ship) {
 
 
 function displayShipNavigation(ship) {
-    functions.clearLastLn(6);
+    ui.clearLastLn(6);
 
     stat = ship.nav.status
     route = ship.nav.route;
@@ -185,7 +185,7 @@ function displayShipNavigation(ship) {
         "ARTM": functions.formatTime(route.arrival),
         "DPTM": functions.formatTime(route.departureTime),
     }
-    functions.outMenu("NAVIGATION", body, false);
+    ui.outMenu("NAVIGATION", body, false);
 
     console.log("");
     console.log("Press 'R' to route ship.");
@@ -208,8 +208,8 @@ function displayShipNavigation(ship) {
 }
 
 function displayChangeFlightMode(ship) {
-    functions.clearLastLn(6);
-    functions.outSelector("FLIGHT MODE", { "CURRENT": ship.nav.flightMode }, ["CRUISE", "BURN", "DRIFT", "STEALTH"], false).then((mode) => {
+    ui.clearLastLn(6);
+    ui.outSelector("FLIGHT MODE", { "CURRENT": ship.nav.flightMode }, ["CRUISE", "BURN", "DRIFT", "STEALTH"], false).then((mode) => {
         // PATCH /my/ships/{symbol}/nav
         functions.st_fetch('my/ships/' + ship.symbol + '/nav', (response) => {
             if(response.error) { console.log(response.error); }
@@ -223,7 +223,7 @@ function displayChangeFlightMode(ship) {
 }
 
 function displayShipRouting(ship) {
-    functions.clearLastLn(6);
+    ui.clearLastLn(6);
     functions.st_fetch('my/ships/' + ship.symbol + '/route', (response) => {
         
     });
@@ -231,7 +231,7 @@ function displayShipRouting(ship) {
 
 
 function displayShipCargo(ship) {
-    functions.clearLastLn(6);
+    ui.clearLastLn(6);
     functions.outMenu("CARGO", {
         "INVT": ship.cargo.inventory
     }, false);
@@ -241,9 +241,9 @@ function displayShipCargo(ship) {
 
 
 function displayShipCrew(ship) {
-    functions.clearLastLn(6);
-    functions.outMenu("CREW", ship.crew, false);
-    functions.back(displayShipDetails, ship);
+    ui.clearLastLn(6);
+    ui.outMenu("CREW", ship.crew, false);
+    ui.back(displayShipDetails, ship);
 }
 
 

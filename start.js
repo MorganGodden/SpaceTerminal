@@ -1,2 +1,2 @@
-const functions = require('./scripts/functions.js')
-functions.mainMenu();
+const ui = require('./scripts/api/ui.js');
+ui.mainMenu();

@@ -1,11 +1,10 @@
-const functions = require('./functions.js');
+const functions = require('./api/functions.js');
 const chalk = require('chalk');
 
 
 module.exports = {get};
 
 function get() {
-    functions.outHeader();
     functions.st_fetch('factions', (response) => {
         // Output faction names
         response.data.map(faction => {

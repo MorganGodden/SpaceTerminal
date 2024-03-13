@@ -1,20 +1,18 @@
-const functions = require('./functions.js');
+const functions = require('./api/functions.js');
+const ui = require('./api/ui.js');
 
 
 module.exports = {get};
 
 function get() {
-    functions.outHeader();
-    functions.st_fetch('my/agent', (response) => {
-        data = response.data;
+    request = functions.st_fetch('my/agent', (response) => {
+        const data = response.data;
         // Output
-        functions.outMenu("AGENT", {
+        ui.outMenu("AGENT", {
             "ACNT": data.symbol + " (" + data.accountId + ")",
             "FACT": data.startingFaction + " (" + data.headquarters + ")",
             "CRDT": functions.formatCredits(data.credits),
             "SHPS": data.shipCount
-        });
-
-        functions.back();
+        }, () => { ui.back(); });
     });
 }

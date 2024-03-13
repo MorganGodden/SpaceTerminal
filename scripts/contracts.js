@@ -1,4 +1,4 @@
-const functions = require('./functions.js');
+const functions = require('./api/functions.js');
 const chalk = require('chalk');
 
 module.exports = {get};
@@ -16,19 +16,19 @@ function selectShip() {
             i++;
         });
 
-        functions.outMenu("SELECT SHIP", ships)
+        functions.outMenu("SELECT SHIP", ships, () => {
+            console.log("\nPress a number to select a ship.");
+            console.log("Press 'BACKSPACE' to go back.");
+            functions.keyboardInput((str, key) => {
+                if(key.name <= i && key.name >= 1) {
+                    requestContract(ships[key.name]);
+                }
 
-        console.log("\nPress a number to select a ship.");
-        console.log("Press 'BACKSPACE' to go back.");
-        functions.keyboardInput((str, key) => {
-            if(key.name <= i && key.name >= 1) {
-                requestContract(ships[key.name]);
-            }
-
-            else if(key.name == 'backspace') {
-                functions.mainMenu();
-            }
-        });
+                else if(key.name == 'backspace') {
+                    functions.mainMenu();
+                }
+            });
+        })
     });
 }
 
@@ -50,17 +50,17 @@ function displayContracts() {
             body[i + 1] = id + " (" + contract.factionSymbol + ")";
         });
 
-        functions.outMenu("CONTRACTS", body);
-
-        console.log("\nPress a number to view contract details");
-        console.log("Press 'N' to request a new contract.");
-        console.log("Press 'BACKSPACE' to go back.");
-        functions.keyboardInput((str, key) => {
-            if(key.name <= response.data.length && key.name >= 1) {
-                displayContractDetails(response.data[str - 1]);
-            }
-            else if(key.name == 'n') { selectShip(); }
-            else if(key.name == 'backspace') { functions.mainMenu(); } 
+        functions.outMenu("CONTRACTS", body, () => {
+            console.log("\nPress a number to view contract details");
+            console.log("Press 'N' to request a new contract.");
+            console.log("Press 'BACKSPACE' to go back.");
+            functions.keyboardInput((str, key) => {
+                if(key.name <= response.data.length && key.name >= 1) {
+                    displayContractDetails(response.data[str - 1]);
+                }
+                else if(key.name == 'n') { selectShip(); }
+                else if(key.name == 'backspace') { functions.mainMenu(); } 
+            });
         });
     });
 }
@@ -85,17 +85,17 @@ function displayContractDetails(contract) {
         body.deadlineToAccept = functions.formatTime(contract.deadlineToAccept);
     }
 
-    functions.outMenu("DETAILS", body, false);
-    
-    console.log("\nPress 'T' to view terms.");
-    console.log("Press 'BACKSPACE' to go back.");
-    functions.keyboardInput((str, key) => {
-        if(key.name == 'backspace') {
-            displayContracts();
-        }
-        else if(key.name == 't') {
-            displayContractTerms(contract);
-        }
+    functions.outMenu("DETAILS", body, false, () => {
+        console.log("\nPress 'T' to view terms.");
+        console.log("Press 'BACKSPACE' to go back.");
+        functions.keyboardInput((str, key) => {
+            if(key.name == 'backspace') {
+                displayContracts();
+            }
+            else if(key.name == 't') {
+                displayContractTerms(contract);
+            }
+        });
     });
 }
 
@@ -114,26 +114,26 @@ function displayContractTerms(contract) {
     });
     body.deliver = bodyDeliver.substring(0, bodyDeliver.length - 1);
 
-    functions.outMenu("TERMS", body, false);
-    
-    console.log("");
-    if(!contract.accepted) console.log("Press 'A' to accept the contract.");
-    console.log("Press 'BACKSPACE' to go back.");
-    functions.keyboardInput((str, key) => {
-        if(key.name == 'backspace') {
-            displayContracts();
-        }
-        else if(!contract.accepted && key.name == 'a') {
-            console.log("Accepting contract... (" + contract.id + ")");
-            functions.st_fetch('my/contracts/' + contract.id + '/accept', (response) => {
-                if(!response.error) {
-                    displayContracts();
-                } else {
-                    console.log(response.error);
-                    displayContractDetails(response);
-                }
-            }, 'POST');
-        }
+    functions.outMenu("TERMS", body, false, () => {
+        console.log("");
+        if(!contract.accepted) console.log("Press 'A' to accept the contract.");
+        console.log("Press 'BACKSPACE' to go back.");
+        functions.keyboardInput((str, key) => {
+            if(key.name == 'backspace') {
+                displayContracts();
+            }
+            else if(!contract.accepted && key.name == 'a') {
+                console.log("Accepting contract... (" + contract.id + ")");
+                functions.st_fetch('my/contracts/' + contract.id + '/accept', (response) => {
+                    if(!response.error) {
+                        displayContracts();
+                    } else {
+                        console.log(response.error);
+                        displayContractDetails(response);
+                    }
+                }, 'POST');
+            }
+        });
     });
 }
 
@@ -142,12 +142,12 @@ function displayNewContract(response) {
     if(response.error) {
         body = response.error;
     }
-    functions.outMenu("NEW CONTRACT", body);
-
-    console.log("\nPress 'BACKSPACE' to go back.");
-    functions.keyboardInput((str, key) => {
-        if(key.name == 'backspace') {
-            displayContracts();
-        }
+    functions.outMenu("NEW CONTRACT", body, () => {
+        console.log("\nPress 'BACKSPACE' to go back.");
+        functions.keyboardInput((str, key) => {
+            if(key.name == 'backspace') {
+                displayContracts();
+            }
+        });
     });
 }
