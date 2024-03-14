@@ -1,6 +1,6 @@
 ![spaceTerminal](https://github.com/MorganGodden/SpaceTerminal/assets/52884391/b9821706-1b63-4cd6-929c-0052851149dd)
 
-# ❔Info
+# :question:Info
 The SpaceTerminal client is a front-end project for the API game [SpaceTraders](https://spacetraders.io).
 ## Features
 - [x] Login System.

@@ -1,5 +1,7 @@
-const functions = require('./api/functions.js');
 const chalk = require('chalk');
+
+const functions = require('./api/functions.js');
+const ui = require('./api/ui.js');
 
 module.exports = {get};
 
@@ -16,16 +18,16 @@ function selectShip() {
             i++;
         });
 
-        functions.outMenu("SELECT SHIP", ships, () => {
+        ui.outMenu("SELECT SHIP", ships, () => {
             console.log("\nPress a number to select a ship.");
             console.log("Press 'BACKSPACE' to go back.");
-            functions.keyboardInput((str, key) => {
+            ui.keyboardInput((str, key) => {
                 if(key.name <= i && key.name >= 1) {
                     requestContract(ships[key.name]);
                 }
 
                 else if(key.name == 'backspace') {
-                    functions.mainMenu();
+                    ui.mainMenu();
                 }
             });
         })
@@ -50,23 +52,23 @@ function displayContracts() {
             body[i + 1] = id + " (" + contract.factionSymbol + ")";
         });
 
-        functions.outMenu("CONTRACTS", body, () => {
+        ui.outMenu("CONTRACTS", body, () => {
             console.log("\nPress a number to view contract details");
             console.log("Press 'N' to request a new contract.");
             console.log("Press 'BACKSPACE' to go back.");
-            functions.keyboardInput((str, key) => {
+            ui.keyboardInput((str, key) => {
                 if(key.name <= response.data.length && key.name >= 1) {
                     displayContractDetails(response.data[str - 1]);
                 }
                 else if(key.name == 'n') { selectShip(); }
-                else if(key.name == 'backspace') { functions.mainMenu(); } 
+                else if(key.name == 'backspace') { ui.mainMenu(); } 
             });
         });
     });
 }
 
 function displayContractDetails(contract) {
-    functions.clearLastLn(4);
+    ui.clearLastLn(4);
 
     body = {};
     Object.assign(body, contract);
@@ -85,10 +87,10 @@ function displayContractDetails(contract) {
         body.deadlineToAccept = functions.formatTime(contract.deadlineToAccept);
     }
 
-    functions.outMenu("DETAILS", body, false, () => {
+    ui.outMenu("DETAILS", body, () => {
         console.log("\nPress 'T' to view terms.");
         console.log("Press 'BACKSPACE' to go back.");
-        functions.keyboardInput((str, key) => {
+        ui.keyboardInput((str, key) => {
             if(key.name == 'backspace') {
                 displayContracts();
             }
@@ -96,11 +98,11 @@ function displayContractDetails(contract) {
                 displayContractTerms(contract);
             }
         });
-    });
+    }, false);
 }
 
 function displayContractTerms(contract) {
-    functions.clearLastLn(3);
+    ui.clearLastLn(3);
 
     body = {};
     Object.assign(body, contract.terms);
@@ -114,11 +116,11 @@ function displayContractTerms(contract) {
     });
     body.deliver = bodyDeliver.substring(0, bodyDeliver.length - 1);
 
-    functions.outMenu("TERMS", body, false, () => {
+    ui.outMenu("TERMS", body, () => {
         console.log("");
         if(!contract.accepted) console.log("Press 'A' to accept the contract.");
         console.log("Press 'BACKSPACE' to go back.");
-        functions.keyboardInput((str, key) => {
+        ui.keyboardInput((str, key) => {
             if(key.name == 'backspace') {
                 displayContracts();
             }
@@ -134,7 +136,7 @@ function displayContractTerms(contract) {
                 }, 'POST');
             }
         });
-    });
+    }, false);
 }
 
 function displayNewContract(response) {
@@ -142,9 +144,9 @@ function displayNewContract(response) {
     if(response.error) {
         body = response.error;
     }
-    functions.outMenu("NEW CONTRACT", body, () => {
+    ui.outMenu("NEW CONTRACT", body, () => {
         console.log("\nPress 'BACKSPACE' to go back.");
-        functions.keyboardInput((str, key) => {
+        ui.keyboardInput((str, key) => {
             if(key.name == 'backspace') {
                 displayContracts();
             }

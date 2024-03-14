@@ -22,7 +22,7 @@ function displayShips(data) {
     ui.outMenu("SHIPS", body);
 
     console.log("\nPress a number to view ship details. Or 'BACKSPACE' to go back.");
-    functions.keyboardInput((str, key) => {
+    ui.keyboardInput((str, key) => {
         if(key.name <= i && key.name >= 1) {
             displayShipDetails(data[str - 1]);
         }
@@ -42,35 +42,35 @@ function displayShipDetails(ship) {
     stat = (stat == "DOCKED") ? chalk.green(stat) : chalk.yellow(stat);
     mode = ship.nav.flightMode
     
-    functions.outMenu("SHIP DETAILS", {
+    ui.outMenu("SHIP DETAILS", {
         "NAME": registration.name + " (" + registration.factionSymbol + ")",
         "TYPE": registration.role,
         "LOCA": ship.nav.waypointSymbol + " (" + stat + ", " + mode + ")",
         "FUEL": ship.fuel.current + "/" + ship.fuel.capacity,
         "CREW": ship.crew.current + "/" + ship.crew.capacity,
         "CRGO": ship.cargo.units + "/" + ship.cargo.capacity,
-    });
-
-    console.log("\nPress 'C' for crew.");
-    console.log("Press 'G' for cargo.");
-    console.log("Press 'N' for navigation.");
-    console.log("Press 'M' for waypoint market.");
-    console.log("Press 'BACKSPACE' to go back.");
-
-    functions.keyboardInput((str, key) => {
-        switch(key.name) {
-            case 'c': displayShipCrew(ship); break;
-            case 'g': displayShipCargo(ship); break;
-            case 'n': displayShipNavigation(ship); break;
-            case 'm': displayWaypointMarket(ship); break;
-            case 'backspace': get(); break;
-        }
+    }, () => {
+        console.log("\nPress 'C' for crew.");
+        console.log("Press 'G' for cargo.");
+        console.log("Press 'N' for navigation.");
+        console.log("Press 'M' for waypoint market.");
+        console.log("Press 'BACKSPACE' to go back.");
+    
+        ui.keyboardInput((str, key) => {
+            switch(key.name) {
+                case 'c': displayShipCrew(ship); break;
+                case 'g': displayShipCargo(ship); break;
+                case 'n': displayShipNavigation(ship); break;
+                case 'm': displayWaypointMarket(ship); break;
+                case 'backspace': get(); break;
+            }
+        });
     });
 }
 
 
 function displaySystem(ship) {
-    functions.clearLastLn(6);
+    ui.clearLastLn(6);
     functions.st_fetch('/systems/' + ship.nav.systemSymbol, (response) => {
         system = response.data
 
@@ -80,12 +80,12 @@ function displaySystem(ship) {
         };
 
         
-        functions.outMenu("SYSTEM", body, false);
+        ui.outMenu("SYSTEM", body, null, false);
 
         console.log("\nPress 'W' to view waypoints.");
         console.log("Press 'BACKSPACE' to go back.");
 
-        functions.keyboardInput((str, key) => {
+        ui.keyboardInput((str, key) => {
             switch(key.name) {
                 case 'w': displayWaypoints(ship, system); break;
                 case 'backspace': displayShipDetails(ship); break;
@@ -96,7 +96,7 @@ function displaySystem(ship) {
 
 
 function displayWaypoints(ship, system) {
-    functions.clearLastLn(5);
+    ui.clearLastLn(5);
     waypoints = system.waypoints;
 
     body = {};
@@ -106,12 +106,12 @@ function displayWaypoints(ship, system) {
         i++;
     });
 
-    functions.outMenu("WAYPOINTS", body, false);
+    ui.outMenu("WAYPOINTS", body, null, false);
 
     console.log("\nPress a number to view waypoint details.");
     console.log("Press 'BACKSPACE' to go back.");
 
-    functions.keyboardInput((str, key) => {
+    ui.keyboardInput((str, key) => {
         if(key.name <= i && key.name >= 1) {
             //displayWaypointDetails(waypoints[str - 1]);
         }
@@ -136,7 +136,7 @@ function displayWaypointMarket(ship) {
             response.imports.map((good) => { imp += good.name + "; " + ((i % 3 == 0) ? "\n" : ""); i++; });
             response.exports.map((good, i) => exp += good.name + " (" + good.description + ")\n");
             response.transactions.map((good, i) => trans += good.units + " " + good.tradeSymbol + " by " + good.shipSymbol + "\n");
-            response.tradeGoods.map((good, i) => trade += good.symbol + " (" + good.tradeVolume + " units, " + ui.formatCredits(good.purchasePrice) + " each)\n");
+            response.tradeGoods.map((good, i) => trade += good.symbol + " (" + good.tradeVolume + " units, " + functions.formatCredits(good.purchasePrice) + " each)\n");
 
             imp = (imp == "") ? "N/A" : imp.slice(0, -3);
             exp = (exp == "") ? "N/A" : exp.slice(0, -1);
@@ -152,9 +152,9 @@ function displayWaypointMarket(ship) {
             };
         }
 
-        ui.outMenu("MARKET", market, false);
+        ui.outMenu("MARKET", market, null, false);
         console.log("\nPress 'BACKSPACE' to go back.");
-        functions.keyboardInput((str, key) => {
+        ui.keyboardInput((str, key) => {
             if(key.name == 'backspace') {
                 displayShipDetails(ship);
             }
@@ -169,8 +169,11 @@ function displayShipNavigation(ship) {
     stat = ship.nav.status
     route = ship.nav.route;
 
-    departure = route.departure
-    departure = `${departure.symbol} (${departure.type} @ ${departure.x}x, ${departure.y}y)`;
+    var departure = "N/A";
+    if(route.departure) {
+        departure = route.departure
+        departure = `${departure.symbol} (${departure.type} @ ${departure.x}x, ${departure.y}y)`;
+    }
 
     origin = route.origin
     origin = `${origin.symbol} (${origin.type} @ ${origin.x}x, ${origin.y}y)`
@@ -185,7 +188,7 @@ function displayShipNavigation(ship) {
         "ARTM": functions.formatTime(route.arrival),
         "DPTM": functions.formatTime(route.departureTime),
     }
-    ui.outMenu("NAVIGATION", body, false);
+    ui.outMenu("NAVIGATION", body, null, false);
 
     console.log("");
     console.log("Press 'R' to route ship.");
@@ -195,7 +198,7 @@ function displayShipNavigation(ship) {
     if(stat != "IN_ORBIT") console.log("Press 'O' to orbit.");
     console.log("Press 'BACKSPACE' to go back.");
 
-    functions.keyboardInput((str, key) => {
+    ui.keyboardInput((str, key) => {
         switch(key.name) {
             case 'r': displayShipRouting(ship); break;
             case 'f': displayChangeFlightMode(ship); break;
@@ -232,11 +235,11 @@ function displayShipRouting(ship) {
 
 function displayShipCargo(ship) {
     ui.clearLastLn(6);
-    functions.outMenu("CARGO", {
+    ui.outMenu("CARGO", {
         "INVT": ship.cargo.inventory
     }, false);
 
-    functions.back(displayShipDetails, ship);
+    ui.back(displayShipDetails, ship);
 }
 
 

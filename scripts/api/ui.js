@@ -1,6 +1,7 @@
 const chalk = require('chalk');
 const readline = require('readline');
-const functions = require('./functions.js');
+const { getUserData, setUserData, st_fetch } = require('./functions.js');
+const { get } = require('http');
 
 module.exports = { keyboardInput, login, signUp, mainMenu, outText, outSelector, outMenu, outHeader, optionsIndex, clearLastLn, back };
 ansiRegex = new RegExp(['[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)','(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))'].join('|'))
@@ -9,15 +10,62 @@ var displayLastMenu = null;
 
 
 // Outputs
-function signUp() {
-    outHeader();
-    console.log("Sign up at https://spacetraders.io/ to get your token.");
-    console.log("Press 'BACKSPACE' to go back.");
-    keyboardInput((str, key) => {
-        if (key.name == 'backspace') {
-            mainMenu();
+function signUp(doHeader = true) {
+    if(doHeader) outHeader();
+
+    var symbol = "";
+    var faction = "";
+    console.log("Sign-up for a new account.");
+    process.stdout.write("Enter your callsign: ");
+
+
+    getFaction = () => keyboardInput((str, key) => {
+        if (key.name == 'return') {
+            if(faction.length > 3) {
+                st_fetch('register', (response) => {
+                    setUserData('token', response.data.token);
+                    mainMenu();
+                }, 'POST', { symbol: symbol, faction: faction });
+            }
+            else {
+                outHeader();
+                console.log(chalk.red("Invalid faction. Please try again."));
+                signUp(false);
+            }
+            return
         }
+        else if (key.name == 'backspace') { faction = faction.slice(0, -1); }
+        else { faction += str.toUpperCase();; }
+
+        process.stdout.clearLine();
+        process.stdout.cursorTo(0);
+        process.stdout.write("Enter your faction: " + chalk.gray.bold(faction));
     });
+
+
+    getSymbol = () => keyboardInput((str, key) => {
+        if (key.name == 'return') {
+            if(symbol.length > 3) {
+                process.stdout.write("\nEnter your faction: ");
+                getFaction();
+            }
+            else {
+                outHeader();
+                console.log(chalk.red("Invalid callsign. Please try again."));
+                signUp(false);
+            }
+            return
+        }
+        else if (key.name == 'backspace') { symbol = symbol.slice(0, -1); }
+        else { symbol += str.toUpperCase(); }
+
+        process.stdout.clearLine();
+        process.stdout.cursorTo(0);
+        process.stdout.write("Enter your callsign: " + chalk.gray.bold(symbol));
+    });
+
+
+    getSymbol();
 }
 
 function login(doHeader = true) {
@@ -30,7 +78,7 @@ function login(doHeader = true) {
         if (key.name == 'return') {
             if(input.length > 100) {
                 options.headers.Authorization = 'Bearer ' + input;
-                functions.setUserData('token', input);
+                setUserData('token', input);
                 mainMenu();
             }
             else {
@@ -60,7 +108,7 @@ function login(doHeader = true) {
 }
 
 function mainMenu() {
-    if(functions.getUserData('token') == null) {
+    if(getUserData('token') == null) {
         login();
         return;
     }
@@ -113,7 +161,7 @@ async function outSelector(title, body, options, doHeader = true) {
                 clearLastLn(9);
                 resolve(options[optionsIndex]);
             }
-            else if (key.name === 'backspace') { back(); }
+            else if (key.name === 'backspace') { displayLastMenu(); }
         });
     });
 }
@@ -131,7 +179,6 @@ function getUIWidth(title, data) {
         rowCount = Object.keys(data).length;
     }
 
-    
     // Menu width based on longest key-value pair
     uiWidth = 0;
     for (var i = 0; i < rowCount; i++) {
@@ -141,7 +188,7 @@ function getUIWidth(title, data) {
             rows = String(data[key]).split("\n");
             for (var ii = 0; ii < rows.length; ii++) {
                 row = rows[ii].replace(ansiRegex, '').replace(/\u001b\[.*?m/g, '');
-                length = String(key).length + row.length + 4;
+                length = String(key).length + row.length + 2;
                 if (length > uiWidth) uiWidth = length;
             }
         }
@@ -156,7 +203,7 @@ function getUIWidth(title, data) {
     if ((strippedTitle.length + 4) > uiWidth) uiWidth = strippedTitle.length;
 
     // Title dashes
-    titleDashes = uiWidth - strippedTitle.length - 2;
+    titleDashes = uiWidth - strippedTitle.length;
     if (titleDashes < 0) titleDashes = 0;
 
     return [uiWidth, titleDashes];
@@ -166,7 +213,7 @@ function getUIWidth(title, data) {
 function outUI(type, title, body, width, then, doHeader = true) {
     if(doHeader) outHeader();
 
-    body = ("╭ " + chalk.bold(title) + " " + ("─".repeat(width[1] + 2)) + "╮\n") + body // Title
+    body = ("╭ " + chalk.bold(title) + " " + ("─".repeat(width[1])) + "╮\n") + body // Title
     body = body + ("\n╰" + ("─".repeat(width[0] + 2)) + "╯"); // Footer
 
     if(type == "ERROR") {
@@ -179,6 +226,7 @@ function outUI(type, title, body, width, then, doHeader = true) {
                    .replace(title, chalk.red(title));
     }
 
+    process.stdout.cursorTo(0);
     console.log(body);
 
     if (then) then();
@@ -189,7 +237,11 @@ function outText(type, title, data, then, doHeader = true) {
     const menuWidth = getUIWidth(title, data);
 
     // Body rows
-    data = data.split("\n");
+    if(data) {
+        if(!data.split) { console.log(data); return; } // Typical code error
+        data = data.split("\n"); // API error
+    }
+
     var bodyOutput = "";
     for (var i = 0; i < data.length; i++) {
         rowSpaces = menuWidth[0] - data[i].length;
@@ -204,7 +256,8 @@ function outText(type, title, data, then, doHeader = true) {
 
 
 function outMenu(title, body, then, doHeader = true, doColons = true) {
-    displayLastMenu = () => outMenu(title, body, then, doHeader, doColons);
+    if(doHeader) displayLastMenu = () => outMenu(title, body, then, doHeader, doColons);
+
     const menuWidth = getUIWidth(title, body);
 
     // Body rows

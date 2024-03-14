@@ -1,5 +1,7 @@
-const functions = require('./api/functions.js');
 const chalk = require('chalk');
+
+const functions = require('./api/functions.js');
+const ui = require('./api/ui.js');
 
 
 module.exports = {get};
@@ -19,13 +21,13 @@ function get() {
                 traits.push(trait.name);
             });
 
-            functions.outMenu(name + " (" + faction.symbol + ")", {
+            ui.outMenu(name + " (" + faction.symbol + ")", {
                 "HQ": faction.headquarters,
                 "TRTS": traits.join(", "),
                 "DESC": desc
-            }, false);
+            }, null, false);
         });
 
-        functions.back();
+        ui.back();
     })
 }

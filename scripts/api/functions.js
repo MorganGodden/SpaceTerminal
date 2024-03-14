@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const os = require('os');
 const fs = require('fs');
 
-const ui = require('./ui.js');
+const { outText } = require('./ui.js');
 
 
 dotenv.config();
@@ -23,12 +23,17 @@ options = {
 };
 
 
+
 function st_fetch(path, func, method, data = null) {
     options["method"] = method;
     if (data) options["body"] = JSON.stringify(data);
 
+    if(!options["headers"]["Authorization"]) options["headers"]["Authorization"] = 'Bearer ' + getUserData('token');
+    else if(path == "register") delete options["headers"]["Authorization"];
 
     function onError(err, doKeyboard = true) {
+        const ui = require('./ui.js'); // ! Circular dependency workaround
+        ui.outHeader();
         ui.outText("ERROR", "ERROR: " + path, err, null, false);
         if(doKeyboard) {
             console.log("\nPress 'BACKSPACE' to go back.");
@@ -46,22 +51,23 @@ function st_fetch(path, func, method, data = null) {
     fetch(path, options)
         .then(response => response.json())
         .then(response => { 
-            if(response.error.message) {
+            if(response.error) {
                 const relogin = response.error.code == "401";
                 onError(response.error.message.replaceAll(". ", ".\n"), !relogin);
                 if(relogin) { 
                     console.log("\nPress 'L' to login again.");
-                    console.log("Press 'C' to create account.");
+                    console.log("Press 'S' to sign-up.");
+
+                    const ui = require('./ui.js'); // ! Circular dependency workaround
                     ui.keyboardInput((str, key) => {
                         if (key.name == 'l') { ui.login(); }
-                        else if (key.name == 'c') { ui.signUp(); }
+                        else if (key.name == 's') { ui.signUp(); }
                     });
                 }
             }
             else { func(response) }
         })
         .catch(err => onError(err));
-
 
     if (data) delete options["body"];
 }
