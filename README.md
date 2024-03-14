@@ -9,7 +9,7 @@ The SpaceTerminal client is a front-end project for the API game [SpaceTraders](
 - [x] Change ship docking status and flight mode.
 
 # 💥Getting Started
-To run the client from a terminal execute the following command:
+To run the client from a terminal, execute the following command:
  ```sh
  node start.js
  ```
