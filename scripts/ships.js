@@ -40,12 +40,11 @@ function displayShipDetails(ship) {
     registration = ship.registration;
     stat = ship.nav.status
     stat = (stat == "DOCKED") ? chalk.green(stat) : chalk.yellow(stat);
-    mode = ship.nav.flightMode
     
     ui.outMenu("SHIP DETAILS", {
         "NAME": registration.name + " (" + registration.factionSymbol + ")",
         "TYPE": registration.role,
-        "LOCA": ship.nav.waypointSymbol + " (" + stat + ", " + mode + ")",
+        "LOCA": ship.nav.waypointSymbol + " (" + stat + ", " + ship.nav.flightMode + ")",
         "FUEL": ship.fuel.current + "/" + ship.fuel.capacity,
         "CREW": ship.crew.current + "/" + ship.crew.capacity,
         "CRGO": ship.cargo.units + "/" + ship.cargo.capacity,
