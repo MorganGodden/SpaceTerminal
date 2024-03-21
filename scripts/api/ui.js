@@ -109,7 +109,7 @@ function login(doHeader = true) {
 
 function mainMenu() {
     if(getUserData('token') == null) {
-        login();
+        signUp();
         return;
     }
 

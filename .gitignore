@@ -1,3 +1,4 @@
 .env
+.VSCodeCounter
 node_modules
 builds

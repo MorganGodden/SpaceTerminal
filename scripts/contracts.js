@@ -46,9 +46,13 @@ function displayContracts() {
     functions.st_fetch('my/contracts', (response) => {
         
         body = {};
+        currentDateTime = new Date();
         response.data.map((contract, i) => {
+
             id = contract.id.substring(0, 8) + "...";
             id = (contract.accepted) ? chalk.green(id) : chalk.red(id);
+
+            if(new Date(contract.deadlineToAccept) < currentDateTime) { id = chalk.strikethrough(id); }
             body[i + 1] = id + " (" + contract.factionSymbol + ")";
         });
 
@@ -140,7 +144,7 @@ function displayContractTerms(contract) {
 }
 
 function displayNewContract(response) {
-    body = response.data;
+    body = response.data.contract;
     if(response.error) {
         body = response.error;
     }
